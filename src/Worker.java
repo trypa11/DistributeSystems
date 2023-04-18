@@ -1,14 +1,17 @@
 //import libraries
 import java.io.*;
+import java.util.*;
 import java.net.*;
 
 public class Worker extends Thread {
-    int a;
-    int b;
-    Worker(int a, int b) {
-        this.a = a;
-        this.b = b;
+    ArrayList<Waypoint> waypoints;
+
+    Worker(ArrayList<Waypoint> waypoints) {
+        this.waypoints = waypoints;
+
     }
+
+
         public void run() {
             ObjectOutputStream out= null ;
             ObjectInputStream in = null ;
@@ -26,13 +29,16 @@ public class Worker extends Thread {
                 in = new ObjectInputStream((requestSocket.getInputStream()));
                 /* Write the two integers */
 
-                Test t =new Test(a,b);
-                out.writeObject(t);
+                ChunksCalc c = new ChunksCalc(waypoints);
+                out.writeObject(c);
                 out.flush();
 
                 /* Print the received result from server */
-                Test t2= (Test) in.readObject();
-                System.out.println("Server>" + t2.getA() +" "+ t2.getB()); /*in.readInt());*/
+                ChunksCalc c2 = (ChunksCalc) in.readObject();
+                System.out.println("Distance: " + c2.getDist());
+                System.out.println("Average Speed: " + c2.getAverageSpeed());
+                System.out.println("Total Elevation: " + c2.getTotalElevation());
+                System.out.println("Total Time: " + c2.getTotalTime());
             } catch (UnknownHostException unknownHost) {
                 System.err.println("You are trying to connect to an unknown host!");
             } catch (IOException ioException) {
@@ -49,11 +55,6 @@ public class Worker extends Thread {
                 }
             }
         }
-    public static void main(String[] args) {
-        Worker w1 = new Worker(1,2);
-        Worker w2 = new Worker(3,4);
-        w1.start();
-        w2.start();
-    }
+
 
 }
