@@ -60,7 +60,7 @@ public class ChunksCalc implements Serializable {
     public double getTotalElevation() {
         double ele = 0;
         for (int i = 0; i < waypoints.size()-1; i++) {
-            //checks if 2 waypoints are only on elevation
+            //checks if  waypoints are at the same elevation
             if (waypoints.get(i).getEle() != waypoints.get(i+1).getEle()) {
                 //checks if the next waypoint is higher than the previous
                 if (waypoints.get(i).getEle() < waypoints.get(i+1).getEle()) {

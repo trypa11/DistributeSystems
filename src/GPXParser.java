@@ -7,7 +7,8 @@ import java.text.*;
 import java.io.Serializable;
 public class GPXParser implements Serializable {
 
-    private Map<String, Waypoint> waypoints;
+    private ArrayList< Waypoint> waypoints;
+    
 
     public GPXParser(String filePath) throws ParserConfigurationException, SAXException, IOException, ParseException {
         // Load GPX file
@@ -20,7 +21,7 @@ public class GPXParser implements Serializable {
         Document doc = dBuilder.parse(is);
 
         // Create a new HashMap to store the waypoints
-        waypoints = new HashMap<>();
+        waypoints = new ArrayList<Waypoint>();
 
         // Get all waypoints from GPX file
         NodeList wptList = doc.getElementsByTagName("wpt");
@@ -42,36 +43,39 @@ public class GPXParser implements Serializable {
             long timeInMillis = time.getTime();
 
             // Create a new Waypoint object and add it to the HashMap
-            String name = "Waypoint " + (i + 1);
-            Waypoint waypoint = new Waypoint(name, lat, lon, ele, timeInMillis);
-            waypoints.put(name, waypoint);
+            int id=i;
+            Waypoint waypoint = new Waypoint(id, lat, lon, ele, timeInMillis);
+            waypoints.add(waypoint);
         }
     }
 
-    public Map<String, Waypoint> getWaypoints() {
+    public ArrayList<Waypoint> getWaypoints() {
         return waypoints;
     }
 }
 
 class Waypoint {
-    private String name;
+
+
+    private int id;
     private double lat;
     private double lon;
     private double ele;
     private long time;
 
-    public Waypoint(String name, double lat, double lon, double ele, long time) {
-        this.name = name;
+    public Waypoint(int id, double lat, double lon, double ele, long time) {
+        this.id = id;
         this.lat = lat;
         this.lon = lon;
         this.ele = ele;
         this.time = time;
     }
 
-    //return name of waypoint
-    public String getName() {
-        return name;
-    }
+    //return id of waypoint
+    public int getId() { return id; }
+    //set id of waypoint
+    public void setId(int id) { this.id = id; }
+
     //return latitude of waypoint
     public double getLat() {
         return lat;

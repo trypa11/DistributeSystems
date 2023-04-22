@@ -15,15 +15,15 @@ public class Main {
         }
         */
         //new Master().openServer();
-        Map<String, Waypoint> map;
+        ArrayList <Waypoint> map = new ArrayList<Waypoint>();
         GPXParser parser = new GPXParser("C:\\Users\\user\\Desktop\\route1.gpx");
         map = parser.getWaypoints();
 
-        // Loop through the map and print each entry
+        /* Loop through the map and print each entry
         for (Map.Entry<String, Waypoint> entry : map.entrySet()) {
             // Print the word and the number
             System.out.println(entry.getKey() + " " + entry.getValue());
-        }
+        }*/
 
     }
 
