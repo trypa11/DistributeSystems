@@ -7,7 +7,7 @@ import java.text.*;
 import java.io.Serializable;
 public class GPXParser implements Serializable {
 
-    private ArrayList< Waypoint> waypoints;
+    private ArrayList<Waypoint> waypoints;
     
 
     public GPXParser(String filePath) throws ParserConfigurationException, SAXException, IOException, ParseException {
@@ -54,7 +54,7 @@ public class GPXParser implements Serializable {
     }
 }
 
-class Waypoint {
+class Waypoint implements Serializable {
 
 
     private int id;

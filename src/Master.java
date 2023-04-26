@@ -1,34 +1,22 @@
 import java.io.*;
 import java.util.*;
-//import java.time.*;
 import java.net.*;
-import java.lang.*;
 
 
 public class Master {
     ServerSocket s;
     Socket providerSocket;
     private int file_num = 1;
+    ArrayList<Waypoint> map = new ArrayList<Waypoint>();
+    ArrayList<Thread> connections = new ArrayList<Thread>();
+    ArrayList<Double> total_dist = new ArrayList<Double>();
+    ArrayList<Double> total_averageSpeed = new ArrayList<Double>();
+    ArrayList<Double> total_totalElevation = new ArrayList<Double>();
+    ArrayList<Double> total_totalTime = new ArrayList<Double>();
 
-    public ArrayList<Waypoint> Map(ArrayList<Waypoint> waypoints) throws Exception {
+    public ArrayList<ArrayList<Waypoint>> Chunk() throws Exception {
         ArrayList<Waypoint> map = new ArrayList<Waypoint>();
         GPXParser parser = new GPXParser("C:\\Users\\user\\Desktop\\route1.gpx");
-        map = parser.getWaypoints();
-        for (int i = 0; i < waypoints.size(); i++) {
-            waypoints.get(i).setId(file_num * 1000 + i);
-            map.add(waypoints.get(i));
-        }
-        file_num++;
-        return map;
-
-    }
-
-    // call worker thread to handle the request
-
-    public static void main(String[] args) throws Exception {
-        // Load waypoints from GPX file
-        ArrayList<Waypoint> map = new ArrayList<Waypoint>();
-        GPXParser parser = new GPXParser("D:\\Downloads\\gpxs\\gpxs\\route1.gpx");
         map = parser.getWaypoints();
         // Split waypoint list into chunks
         int numChunk = 4;
@@ -41,42 +29,38 @@ public class Master {
             }
             chunks.add(chunk);
         }
-        // round robin sheduling for the chunks to the workers
-        int worker_num = 1;
-        for (int i = 0; i < numChunk; i++) {
-            Thread w = new Worker(chunks.get(i));
-            w.start();
-            worker_num++;
-        }
-        // wait for all workers to finish
-        for (int i = 0; i < numChunk; i++) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        return chunks;
+    }
+
+    public ArrayList<Waypoint> getChunk(ArrayList<ArrayList<Waypoint>> chunks,int i){
+        ArrayList<Waypoint> chunk = new ArrayList<Waypoint>();
+        chunk = chunks.get(i);
+        return chunk;
+    }
+
+    public static void main(String[] args) throws Exception {
+        new Master().openServer();
 
     }
 
-    void openServer() throws IOException {
+    void openServer() throws Exception {
         try {
 
             /* Create Server Socket */
-            s = new ServerSocket(4321, 10);
+            s = new ServerSocket(6969, 10);
 
             while (true) {
-
                 /* Accept the connection */
                 providerSocket = s.accept();
                 /* Handle the request */
-                Thread d = new ActionForWorkers(providerSocket);
+                Thread d = new ActionForWorkers(providerSocket,map=getChunk(Chunk(),1));
+                connections.add(d);
                 d.start();
             }
 
         } catch (
 
-                IOException ioException) {
+        IOException ioException) {
             ioException.printStackTrace();
         } finally {
             try {
@@ -89,9 +73,3 @@ public class Master {
     }
 
 }
-
-
-
-
-
-
