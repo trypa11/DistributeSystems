@@ -13,11 +13,12 @@ public class Worker extends Thread {
     public void run() {
         ObjectOutputStream out = null;
         ObjectInputStream in = null;
+
         Socket requestSocket = null;
 
         try {
 
-            /* Create socket for contacting the server on port 4321 */
+            /* Create socket for contacting the server on port 6969 */
 
             requestSocket = new Socket("localhost", 6969);
 
@@ -28,9 +29,9 @@ public class Worker extends Thread {
             waypoints = (ArrayList<Waypoint>) in.readObject();
 
             // test to see if waypoints are being read in correctly
-            for (Waypoint w : waypoints) {
-                System.out.println(w);
-            }
+            // for (Waypoint w : waypoints) {
+            // System.out.println(w);
+            // }
 
             ChunksCalc c = new ChunksCalc(waypoints);
 
@@ -61,7 +62,21 @@ public class Worker extends Thread {
     }
 
     public static void main(String[] args) throws Exception {
-        new Worker().start();
+        Worker w = new Worker();
+        w.start();
+        Worker w2 = new Worker();
+        w2.start();
+        // restart workers after they finish
+        while (true) {
+            if (!w.isAlive()) {
+                w = new Worker();
+                w.start();
+            }
+            if (!w2.isAlive()) {
+                w2 = new Worker();
+                w2.start();
+            }
+        }
     }
 
 }

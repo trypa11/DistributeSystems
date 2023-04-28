@@ -6,15 +6,14 @@ public class ActionForWorkers extends Thread {
     ObjectInputStream in;
     ObjectOutputStream out;
     ArrayList<Waypoint> map;
-    double dist;
-    double averageSpeed;
-    double totalElevation;
-    double totalTime;
+    ChunksCalc c=null;
+    Socket connection;
 
     public ActionForWorkers(Socket connection, ArrayList<Waypoint> map) {
         try {
             out = new ObjectOutputStream((connection.getOutputStream()));
             in = new ObjectInputStream((connection.getInputStream()));
+            this.connection = connection;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -34,15 +33,13 @@ public class ActionForWorkers extends Thread {
             out.flush();
 
             ChunksCalc c = (ChunksCalc) in.readObject();
+            this.c=c;
 
-            System.out.println("Distance: " + c.getDist());
-            System.out.println("Average Speed: " + c.getAverageSpeed());
-            System.out.println("Total Elevation: " + c.getTotalElevation());
-            System.out.println("Total Time: " + c.getTotalTime());
-            setDist(c.getDist());
-            setAverageSpeed(c.getAverageSpeed());
-            setTotalElevation(c.getTotalElevation());
-            setTotalTime(c.getTotalTime());
+            //System.out.println("Distance: " + c.getDist());
+            //System.out.println("Average Speed: " + c.getAverageSpeed());
+            //System.out.println("Total Elevation: " + c.getTotalElevation());
+            //System.out.println("Total Time: " + c.getTotalTime());
+
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,29 +56,12 @@ public class ActionForWorkers extends Thread {
 
     }
 
-    public double getDist(){
-        return dist;
+    //get method
+    public ChunksCalc getChunksCalc(){
+        return c;
     }
-    public double getAverageSpeed(){
-        return averageSpeed;
+    public Socket getSocket(){
+        return connection;
     }
-    public double getTotalElevation(){
-        return totalElevation;
-    }
-    public double getTotalTime(){
-        return totalTime;
-    }
-    //create set method for each variable
-    public void setDist(double dist){
-        this.dist = dist;
-    }
-    public void setAverageSpeed(double averageSpeed){
-        this.averageSpeed = averageSpeed;
-    }
-    public void setTotalElevation(double totalElevation){
-        this.totalElevation = totalElevation;
-    }
-    public void setTotalTime(double totalTime){
-        this.totalTime = totalTime;
-    }
+
 }
