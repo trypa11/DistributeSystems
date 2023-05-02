@@ -5,37 +5,20 @@ import java.time.*;
 
 public class Master {
     ServerSocket s;
-    ArrayList<Socket> provider_sockets = new ArrayList<Socket>();
-
-    ArrayList<Waypoint> map = new ArrayList<Waypoint>();
+    ServerSocket s_c;
+    Socket provider_socket;
+    Socket client_socket;
+    // array list for gpx files
+    ArrayList<File> gpxlist = new ArrayList<File>();
     ArrayList<Double> total_dist = new ArrayList<Double>();
     ArrayList<Double> total_averageSpeed = new ArrayList<Double>();
     ArrayList<Double> total_totalElevation = new ArrayList<Double>();
     ArrayList<Double> total_totalTime = new ArrayList<Double>();
-    ArrayList<ArrayList<Waypoint>> chunks = new ArrayList<ArrayList<Waypoint>>();
     ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>();
-
-    public ArrayList<ArrayList<Waypoint>> Chunk() throws Exception {
-        ArrayList<Waypoint> map = new ArrayList<Waypoint>();
-        GPXParser parser = new GPXParser("C:\\Users\\user\\Desktop\\route1.gpx");
-        map = parser.getWaypoints();
-        // Split waypoint list into chunks
-        int numChunk = 4;
-        int chunkSize = map.size() / numChunk;
-        ArrayList<ArrayList<Waypoint>> chunks = new ArrayList<ArrayList<Waypoint>>();
-        for (int i = 0; i < numChunk; i++) {
-            ArrayList<Waypoint> chunk = new ArrayList<Waypoint>();
-            for (int j = 0; j < chunkSize; j++) {
-                chunk.add(map.get(i * chunkSize + j));
-            }
-            chunks.add(chunk);
-        }
-        return chunks;
-    }
-
-    public void setChunk(ArrayList<ArrayList<Waypoint>> chunks) throws Exception {
-        this.chunks = chunks;
-    }
+    // array list that save the chunks from diffrent gpx file
+    ArrayList<ArrayList<ArrayList<Waypoint>>> chunkslist = new ArrayList<ArrayList<ArrayList<Waypoint>>>();
+    File gpx;
+    File results;
 
     public void StatisticCalculator(ArrayList<Double> total_dist, ArrayList<Double> total_totalElevation,
             ArrayList<Double> total_totalTime) {
@@ -55,90 +38,58 @@ public class Master {
         System.out.println("Average Total Time: " + average_totalTime);
     }
 
-    public static void main(String[] args) throws Exception {
-        new Master().openServer(2);
-
+    // reduce method
+    public void reduce(ArrayList<ChunksCalc> reducelistchunk) {
+        double total_dist = 0;
+        double total_averageSpeed = 0;
+        double total_totalElevation = 0;
+        double total_totalTime = 0;
+        // add all the data from the chunks
+        for (int i = 0; i < reducelistchunk.size(); i++) {
+            total_dist += reducelistchunk.get(i).getDist();
+            total_averageSpeed += reducelistchunk.get(i).getAverageSpeed();
+            total_totalElevation += reducelistchunk.get(i).getTotalElevation();
+            total_totalTime += reducelistchunk.get(i).getTotalTime();
+        }
+        // save it to the total arraylists
+        this.total_dist.add(total_dist);
+        this.total_averageSpeed.add(total_averageSpeed);
+        this.total_totalElevation.add(total_totalElevation);
+        this.total_totalTime.add(total_totalTime);
     }
 
-    void openServer(int i) throws Exception {
+    public static void main(String[] args) throws Exception {
+        Master m = new Master();
+        m.openServer();
+    }
+
+    // write
+    void openServer() throws Exception {
         try {
             /* Create Server Socket */
             s = new ServerSocket(6969, 10);
-            Queue<Thread> queue = new LinkedList<Thread>();
-            setChunk(Chunk());
-            int curr_chunk = 0;
-            Instant start;
-            int curr_socket = 0;
+            s_c = new ServerSocket(6666, 10);
             while (true) {
+                Socket client_socket = s_c.accept();
+                /* Handle the request */
+                ActionsForClients c = new ActionsForClients(client_socket);
+                c.start();
+                this.gpx = ((ActionsForClients) c).getGpxFile();
+                // gpxlist.add(gpx);
+                System.out.println("File recieved");
                 /* Accept the connections */
-                for (int j = 0; j < i; j++) {
-                    Socket provider_socket = s.accept();
-                    provider_sockets.add(provider_socket);
-                    /* Handle the request */
-                    Thread d = new ActionForWorkers(provider_sockets.get(j), chunks.get(j));
-                    curr_chunk++;
-                    d.start();
-                    synchronized (d) {
-                        d.wait();
-                    }
-                    queue.add(d);
-                }
-                // check if all chunks are done
-                while (curr_chunk < chunks.size()) {
-                    Thread d = queue.poll();
-                    // print thread name
-                    System.out.println("Thread " + d.getName() + " is running");
-                    if (d.isAlive()) {
-                        synchronized (d) {
-                            d.notify();
-                        }
-                        start = Instant.now();
-                        // checks if time that the thread has been running is 1 second
-                        if (Duration.between(start, Instant.now()).toMillis() == 1000) {
-                            System.out.println("Thread " + d.getName() + " wayting for 1 second");
-                            synchronized (d) {
-                                d.wait();
-                            }
-                            queue.add(d);
-                        }
-                        break;
-                    } else {
-                        System.out.println("Thread " + d.getName() + " is done");
-                        reducelistchunk.add(((ActionForWorkers) d).getChunksCalc());
-                        if (curr_chunk < chunks.size()) {
-                            Socket provider_socket = s.accept();
-                            provider_sockets.set(curr_socket, provider_socket);
-                            Thread new_d = new ActionForWorkers(provider_sockets.get(curr_socket),
-                                    chunks.get(curr_chunk));
-                            curr_chunk++;
-                            curr_socket++;
-                            if (curr_socket == i) {
-                                curr_socket = 0;
-                            }
-                            new_d.start();
-                            synchronized (new_d) {
-                                new_d.wait();
-                            }
-                            // print thread name
-                            System.out.println("Thread " + new_d.getName() + " is running");
-                            queue.add(new_d);
-                        }
-                        break;
-                    }
-
-                }
+                Socket provider_socket = s.accept();
+                Thread d = new ActionForWorkers(provider_socket, gpx);
+                d.start();
+                reduce(((ActionForWorkers) d).getReduceList());
 
             }
-
-        } catch (
-
-        IOException ioException) {
+        } catch (IOException ioException) {
             ioException.printStackTrace();
         } finally {
             try {
-                for (int j = 0; j < i; j++) {
-                    provider_sockets.get(j).close();
-                }
+                client_socket.close();
+                provider_socket.close();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

@@ -10,9 +10,8 @@ public class GPXParser implements Serializable {
     private ArrayList<Waypoint> waypoints;
     
 
-    public GPXParser(String filePath) throws ParserConfigurationException, SAXException, IOException, ParseException {
-        // Load GPX file
-        File gpxFile = new File(filePath);
+    public GPXParser(File gpxFile) throws ParserConfigurationException, SAXException, IOException, ParseException {
+        // Load GPX file  
         InputStream is = new FileInputStream(gpxFile);
 
         // Parse GPX file
@@ -47,11 +46,34 @@ public class GPXParser implements Serializable {
             Waypoint waypoint = new Waypoint(id, lat, lon, ele, timeInMillis);
             waypoints.add(waypoint);
         }
+
+        
+
+
     }
 
     public ArrayList<Waypoint> getWaypoints() {
         return waypoints;
     }
+    public ArrayList<ArrayList<Waypoint>> Chunk() throws Exception {
+        ArrayList<Waypoint> map = new ArrayList<Waypoint>();
+        for (Waypoint w : waypoints) {
+            map.add(w);
+        }
+        // Split waypoint list into chunks
+        int numChunk = 5;
+        int chunkSize = map.size() / numChunk;
+        ArrayList<ArrayList<Waypoint>> chunks = new ArrayList<ArrayList<Waypoint>>();
+        for (int i = 0; i < numChunk; i++) {
+            ArrayList<Waypoint> chunk = new ArrayList<Waypoint>();
+            for (int j = 0; j < chunkSize; j++) {
+                chunk.add(map.get(i * chunkSize + j));
+            }
+            chunks.add(chunk);
+        }
+        return chunks;
+    }
+    
 }
 
 class Waypoint implements Serializable {
