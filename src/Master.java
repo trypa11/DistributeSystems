@@ -1,20 +1,18 @@
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import java.time.*;
 
 public class Master {
     ServerSocket s;
     ServerSocket s_c;
-    Socket provider_socket;
-    Socket client_socket;
-    // array list for gpx files
-    ArrayList<File> gpxlist = new ArrayList<File>();
+    Socket provider_socket=null;
+    Socket client_socket=null;
     ArrayList<Double> total_dist = new ArrayList<Double>();
     ArrayList<Double> total_averageSpeed = new ArrayList<Double>();
     ArrayList<Double> total_totalElevation = new ArrayList<Double>();
     ArrayList<Double> total_totalTime = new ArrayList<Double>();
     ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>();
+    Queue<File> queue_gpx = new LinkedList<File>();
     // array list that save the chunks from diffrent gpx file
     ArrayList<ArrayList<ArrayList<Waypoint>>> chunkslist = new ArrayList<ArrayList<ArrayList<Waypoint>>>();
     File gpx;
@@ -60,26 +58,45 @@ public class Master {
 
     public static void main(String[] args) throws Exception {
         Master m = new Master();
+        m.openserverclient();
         m.openServer();
     }
-
-    // write
-    void openServer() throws Exception {
-        try {
-            /* Create Server Socket */
-            s = new ServerSocket(6969, 10);
-            s_c = new ServerSocket(6666, 10);
-            while (true) {
+    //write open server method for client 
+    
+    public void openserverclient() throws Exception{
+        s_c = new ServerSocket(6666, 10);
+        try{
+            while (queue_gpx.isEmpty()) {
                 Socket client_socket = s_c.accept();
                 /* Handle the request */
                 ActionsForClients c = new ActionsForClients(client_socket);
                 c.start();
-                this.gpx = ((ActionsForClients) c).getGpxFile();
-                // gpxlist.add(gpx);
-                System.out.println("File recieved");
+                gpx = ((ActionsForClients) c).getGpxFile();
+                queue_gpx.add(gpx);
+
+            }
+    } catch (IOException ioException) {
+        ioException.printStackTrace();
+    } finally {
+        try {
+            if (client_socket != null){
+                client_socket.close();
+            }
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+    }
+    }
+
+    public void openServer() throws Exception {
+        try {
+            /* Create Server Socket */
+            s = new ServerSocket(6969, 10);
+            while (true) {
                 /* Accept the connections */
+                File gpx = queue_gpx.poll();
                 Socket provider_socket = s.accept();
-                Thread d = new ActionForWorkers(provider_socket, gpx);
+                Thread d = new ActionForWorkers(provider_socket,gpx);
                 d.start();
                 reduce(((ActionForWorkers) d).getReduceList());
 
@@ -88,8 +105,8 @@ public class Master {
             ioException.printStackTrace();
         } finally {
             try {
-                client_socket.close();
                 provider_socket.close();
+                
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

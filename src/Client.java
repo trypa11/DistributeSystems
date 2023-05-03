@@ -52,7 +52,6 @@ public class Client extends Thread {
     public static void main(String[] args) throws Exception {
         Client c = new Client("C:\\Users\\user\\Desktop\\route1.gpx");
         c.start();
-
     }
 
 }

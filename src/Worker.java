@@ -8,9 +8,9 @@ public class Worker {
     private ObjectInputStream in = null;
     private Socket requestSocket = null; 
 
-    Worker(Socket requestSocket) {
-        try{
-        this.requestSocket = requestSocket;
+    Worker() {
+    try{
+        this.requestSocket = new Socket("localhost", 6666);
         this.out= new ObjectOutputStream(requestSocket.getOutputStream());
         this.in = new ObjectInputStream((requestSocket.getInputStream()));
     } catch (UnknownHostException unknownHost) {
@@ -84,8 +84,10 @@ public class Worker {
         new Thread (new Runnable() {
             @Override
             public void run() {
-                while(requestSocket.isConnected()){
-                    try {
+                try{
+                        //requestSocket = new Socket("localhost", 6666);
+                        //out= new ObjectOutputStream(requestSocket.getOutputStream());
+                        //in = new ObjectInputStream((requestSocket.getInputStream()));
                         waypoints = (ArrayList<Waypoint>) in.readObject();
 
                     } catch (UnknownHostException unknownHost) {
@@ -113,7 +115,7 @@ public class Worker {
                 
                     }
                 }
-            }
+            
         }).start();
     }
     
@@ -122,8 +124,7 @@ public class Worker {
 
 
     public static void main(String[] args) throws Exception {
-        Socket requestSocket = new Socket("localhost", 6969);
-        Worker w = new Worker( requestSocket);
+        Worker w = new Worker();
         w.readwaypoints();
         w.ProcessSendChunk();
     }
