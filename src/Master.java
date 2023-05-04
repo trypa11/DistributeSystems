@@ -5,16 +5,16 @@ import java.net.*;
 public class Master {
     ServerSocket s;
     ServerSocket s_c;
-    Socket provider_socket=null;
-    Socket client_socket=null;
+    Socket provider_socket = null;
+    Socket client_socket = null;
     ArrayList<Double> total_dist = new ArrayList<Double>();
     ArrayList<Double> total_averageSpeed = new ArrayList<Double>();
     ArrayList<Double> total_totalElevation = new ArrayList<Double>();
     ArrayList<Double> total_totalTime = new ArrayList<Double>();
     ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>();
-    Queue<File> queue_gpx = new LinkedList<File>();
+    static Queue<File> queue_gpx = new LinkedList<File>();
     // array list that save the chunks from diffrent gpx file
-    ArrayList<ArrayList<ArrayList<Waypoint>>> chunkslist = new ArrayList<ArrayList<ArrayList<Waypoint>>>();
+    ArrayList<ArrayList<Waypoint>> chunkslist = new ArrayList<ArrayList<Waypoint>>();
     File gpx;
     File results;
 
@@ -37,7 +37,7 @@ public class Master {
     }
 
     // reduce method
-    public void reduce(ArrayList<ChunksCalc> reducelistchunk) {
+    public void reduce() {
         double total_dist = 0;
         double total_averageSpeed = 0;
         double total_totalElevation = 0;
@@ -60,12 +60,17 @@ public class Master {
         Master m = new Master();
         m.openserverclient();
         m.openServer();
+        m.reduce();
+        // print the results
+        System.out.println("Total Distance: " + m.total_dist);
+        System.out.println("Total Average Speed: " + m.total_averageSpeed);
+        System.out.println("Total Total Elevation: " + m.total_totalElevation);
+        System.out.println("Total Total Time: " + m.total_totalTime);
     }
-    //write open server method for client 
-    
-    public void openserverclient() throws Exception{
+
+    public void openserverclient() throws Exception {
         s_c = new ServerSocket(6666, 10);
-        try{
+        try {
             while (queue_gpx.isEmpty()) {
                 Socket client_socket = s_c.accept();
                 /* Handle the request */
@@ -73,40 +78,45 @@ public class Master {
                 c.start();
                 gpx = ((ActionsForClients) c).getGpxFile();
                 queue_gpx.add(gpx);
-
-            }
-    } catch (IOException ioException) {
-        ioException.printStackTrace();
-    } finally {
-        try {
-            if (client_socket != null){
-                client_socket.close();
             }
         } catch (IOException ioException) {
             ioException.printStackTrace();
+        } finally {
+            try {
+                if (client_socket != null) {
+                    client_socket.close();
+                }
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
         }
-    }
     }
 
     public void openServer() throws Exception {
         try {
             /* Create Server Socket */
             s = new ServerSocket(6969, 10);
-            while (true) {
+            File gpx = queue_gpx.peek();
+            GPXParser chunk = new GPXParser(gpx);
+            this.chunkslist = chunk.Chunk();
+            int curr_chunk = 0;
+            while (curr_chunk < chunkslist.size()) {
                 /* Accept the connections */
-                File gpx = queue_gpx.poll();
                 Socket provider_socket = s.accept();
-                Thread d = new ActionForWorkers(provider_socket,gpx);
+                ActionForWorkers d = new ActionForWorkers(provider_socket, chunkslist.get(curr_chunk));
                 d.start();
-                reduce(((ActionForWorkers) d).getReduceList());
-
+                curr_chunk++;
+                // queue.add(d);
+                reducelistchunk.add(d.getChunksCalc());
             }
         } catch (IOException ioException) {
             ioException.printStackTrace();
         } finally {
             try {
-                provider_socket.close();
-                
+                if (provider_socket != null){
+                    provider_socket.close();
+                }
+                queue_gpx.remove();
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

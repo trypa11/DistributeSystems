@@ -2,52 +2,44 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 
-public class Worker {
-    private ArrayList<Waypoint> waypoints;
-    private ObjectOutputStream out = null;
-    private ObjectInputStream in = null;
-    private Socket requestSocket = null; 
+import java.io.*;
+import java.util.*;
+import java.net.*;
 
-    Worker() {
-    try{
-        this.requestSocket = new Socket("localhost", 6666);
-        this.out= new ObjectOutputStream(requestSocket.getOutputStream());
-        this.in = new ObjectInputStream((requestSocket.getInputStream()));
-    } catch (UnknownHostException unknownHost) {
-        System.err.println("You are trying to connect to an unknown host!");
-    } catch (IOException ioException) {
-        ioException.printStackTrace();
-    } finally {
+public class Worker extends Thread {
+    ArrayList<Waypoint> waypoints;
+
+    // Worker(ArrayList<Waypoint> waypoints
+    // this.waypoints = waypoints;
+
+    // }
+
+    public synchronized void run() {
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+
+        Socket requestSocket = null;
 
         try {
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
-            if (requestSocket != null) {
-                requestSocket.close();
-            }
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        }
 
-    }
-    }
-    public void ProcessSendChunk() throws IOException, ClassNotFoundException {
-        try{
-        ChunksCalc c = new ChunksCalc(waypoints);
+            /* Create socket for contacting the server on port 6969 */
 
-        c.getDist();
-        c.getAverageSpeed();
-        c.getTotalElevation();
-        c.getTotalTime();
+            requestSocket = new Socket("localhost", 6969);
 
-        out.writeObject(c);
-        out.flush();
-        while (requestSocket.isConnected()) {
-            c = new ChunksCalc(waypoints);
+            /* Create the streams to send and receive data from server */
+            out = new ObjectOutputStream(requestSocket.getOutputStream());
+            in = new ObjectInputStream((requestSocket.getInputStream()));
+            //syncronized to read waypoints from server
+
+            waypoints = (ArrayList<Waypoint>) in.readObject();
+
+
+
+            // test to see if waypoints are being read in correctly
+            // for (Waypoint w : waypoints) {
+            // System.out.println(w);
+            // }
+            ChunksCalc c = new ChunksCalc(waypoints);
 
             c.getDist();
             c.getAverageSpeed();
@@ -56,77 +48,37 @@ public class Worker {
 
             out.writeObject(c);
             out.flush();
-        }
-    } catch (UnknownHostException unknownHost) {
-        System.err.println("You are trying to connect to an unknown host!");
-    } catch (IOException ioException) {
-        ioException.printStackTrace();
-    } finally {
+            
 
-        try {
-            if (in != null) {
-                in.close();
-            }
-            if (out != null) {
-                out.close();
-            }
-            if (requestSocket != null) {
-                requestSocket.close();
-            }
+        } catch (UnknownHostException unknownHost) {
+            System.err.println("You are trying to connect to an unknown host!");
         } catch (IOException ioException) {
             ioException.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+
+        } finally {
+            try {
+                in.close();
+                out.close();
+                requestSocket.close();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
         }
-
     }
-
-    }
-    public void readwaypoints(){
-        new Thread (new Runnable() {
-            @Override
-            public void run() {
-                try{
-                        //requestSocket = new Socket("localhost", 6666);
-                        //out= new ObjectOutputStream(requestSocket.getOutputStream());
-                        //in = new ObjectInputStream((requestSocket.getInputStream()));
-                        waypoints = (ArrayList<Waypoint>) in.readObject();
-
-                    } catch (UnknownHostException unknownHost) {
-                        System.err.println("You are trying to connect to an unknown host!");
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                
-                    } finally {
-                
-                        try {
-                            if (in != null) {
-                                in.close();
-                            }
-                            if (out != null) {
-                                out.close();
-                            }
-                            if (requestSocket != null) {
-                                requestSocket.close();
-                            }
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
-                        }
-                
-                    }
-                }
-            
-        }).start();
-    }
-    
-    
-
-
 
     public static void main(String[] args) throws Exception {
         Worker w = new Worker();
-        w.readwaypoints();
-        w.ProcessSendChunk();
+        w.start();
+        // restart worker after they finish
+        while (true) {
+            if (!w.isAlive()) {
+                w = new Worker();
+                w.start();
+            }
+        }
     }
 
 }
+
