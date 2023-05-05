@@ -3,7 +3,6 @@ import java.util.*;
 public class SynchronizedQueue<T> {
     private Queue<T> queue = new LinkedList<>();
 
-
     public synchronized void add(T item) throws InterruptedException {
         queue.add(item);
         notifyAll();
@@ -13,8 +12,13 @@ public class SynchronizedQueue<T> {
         while (queue.isEmpty()) {
             wait();
         }
+        //round robin implementation
         T item = queue.remove();
-        notifyAll();
+        //queue.add(item);
         return item;
     }
+    public synchronized T peek()  {
+        return queue.peek();
+    }
+
 }

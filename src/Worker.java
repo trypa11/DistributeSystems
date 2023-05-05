@@ -2,17 +2,9 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 
-import java.io.*;
-import java.util.*;
-import java.net.*;
-
 public class Worker extends Thread {
     ArrayList<Waypoint> waypoints;
 
-    // Worker(ArrayList<Waypoint> waypoints
-    // this.waypoints = waypoints;
-
-    // }
 
     public synchronized void run() {
         ObjectOutputStream out = null;
@@ -25,15 +17,10 @@ public class Worker extends Thread {
             /* Create socket for contacting the server on port 6969 */
 
             requestSocket = new Socket("localhost", 6969);
-
             /* Create the streams to send and receive data from server */
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             in = new ObjectInputStream((requestSocket.getInputStream()));
-            //syncronized to read waypoints from server
-
             waypoints = (ArrayList<Waypoint>) in.readObject();
-
-
 
             // test to see if waypoints are being read in correctly
             // for (Waypoint w : waypoints) {
@@ -49,7 +36,6 @@ public class Worker extends Thread {
             out.writeObject(c);
             out.flush();
             
-
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");
         } catch (IOException ioException) {
@@ -59,9 +45,15 @@ public class Worker extends Thread {
 
         } finally {
             try {
-                in.close();
-                out.close();
-                requestSocket.close();
+                if (in != null) {
+                    in.close();
+                }
+                if (out != null) {
+                    out.close();
+                }
+                if (requestSocket != null) {
+                    requestSocket.close();
+                }
             } catch (IOException ioException) {
                 ioException.printStackTrace();
             }

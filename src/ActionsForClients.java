@@ -1,17 +1,15 @@
 import java.io.*;
 import java.net.*;
+import java.util.*;
 
 public class ActionsForClients extends Thread {
     ObjectInputStream in;
     ObjectOutputStream out;
-    File gpxFile;
-    File results;
-    boolean ready = false;
-    int num_gpx=0;
+    ArrayList<File> gpxFiles;
+    File results=null;
 
     public ActionsForClients(Socket connection) {
         try {
-
             out = new ObjectOutputStream((connection.getOutputStream()));
             in = new ObjectInputStream((connection.getInputStream()));
         } catch (IOException e) {
@@ -19,15 +17,25 @@ public class ActionsForClients extends Thread {
         }
     }
 
-    public void run() {
+    public synchronized void run() {
         try {
 
-            this.gpxFile = (File) in.readObject();
-            num_gpx++;
-            // if (ready) {
-            // out.writeObject(results);
-            // out.flush();
-            // }
+            gpxFiles = (ArrayList<File>) in.readObject();
+            //wait until the results are ready
+            if(results==null){
+                try{
+                wait();
+                }catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+            }
+            //send the results to the client
+            out.writeObject(results);
+            out.flush();
+            
+            
+
+
 
         } catch (
 
@@ -52,23 +60,12 @@ public class ActionsForClients extends Thread {
     }
 
     // get method of a file from client
-    public File getGpxFile() throws IOException, ClassNotFoundException {
-        return gpxFile;
+    public ArrayList<File> getGpxFile() throws IOException, ClassNotFoundException {
+        return gpxFiles;
     }
 
     public void setResultsFile(File results) throws IOException, ClassNotFoundException {
         this.results = results;
-    }
-
-    public void readyResults(boolean ready) {
-        this.ready = true;
-    }
-
-    public boolean getReady() {
-        return ready;
-    }
-    public int getNumGpx(){
-        return num_gpx;
     }
 
 }

@@ -1,13 +1,13 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Client extends Thread {
-    private String filepath;
-    private File gpxFile;
+
+    private ArrayList<File>gpxFiles  = new ArrayList<File>();
 
     Client(String filep) {
-        this.filepath = filep;
-        this.gpxFile = new File(filepath);
+        listfp(filep, gpxFiles);
     }
 
     public void run() {
@@ -22,17 +22,20 @@ public class Client extends Thread {
             out = new ObjectOutputStream(requestSocket.getOutputStream());
             in = new ObjectInputStream((requestSocket.getInputStream()));
             // write the file
-            out.writeObject(gpxFile);
+            out.writeObject(gpxFiles);
             out.flush();
 
-            // File results = (File)in.readObject();
-            // System.out.println(results);
+             File results = (File)in.readObject();
+             System.out.println(results);
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");
         } catch (IOException ioException) {
             ioException.printStackTrace();
-        } finally {
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
             try {
                 if (in != null){
                     in.close();
@@ -48,9 +51,20 @@ public class Client extends Thread {
             }
         }
     }
-
+    public void listfp(String filepath, ArrayList<File>gpxFiles) {
+        File gpxfilepath = new File(filepath);
+        File[] fList = gpxfilepath.listFiles();
+        if(fList != null)
+            for (File file : fList) {      
+                if (file.isFile()) {
+                    gpxFiles.add(file);
+                } else if (file.isDirectory()) {
+                    listfp(file.getAbsolutePath(), gpxFiles);
+                }
+            }
+    }
     public static void main(String[] args) throws Exception {
-        Client c = new Client("C:\\Users\\user\\Desktop\\route1.gpx");
+        Client c = new Client("C:\\Users\\user\\Desktop");
         c.start();
     }
 

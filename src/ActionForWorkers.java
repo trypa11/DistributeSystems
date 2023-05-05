@@ -23,10 +23,11 @@ public class ActionForWorkers extends Thread {
     }
 
     public synchronized void run() {
-        try {
+        try {      
             ActionForWorkers w = queue.poll();
             w.out.writeObject(chunk);
             w.out.flush();
+
             ChunksCalc c = (ChunksCalc) w.in.readObject();
             w.cc = c;
             
@@ -54,7 +55,7 @@ public class ActionForWorkers extends Thread {
 
     }
 
-    // get reduce list
+    // get calculated chunk 
     public ChunksCalc getChunksCalc() {
         return cc;
     }
