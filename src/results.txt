@@ -1,33 +1,15 @@
 Average Distance: 3300.5240824160937
 Average Total Elevation: 32.95333333333334
 Average Total Time: 885166.6666666666
-1th file
-Total Distance: 2127.329447025927
-Total Total Elevation: 6.489999999999998
-Total Total Time: 837000.0
-Total Average Speed: 0.012818028217591258
-2th file
-Total Distance: 1299.1794926929565
-Total Total Elevation: 4.860000000000001
-Total Total Time: 328000.0
-Total Average Speed: 0.019847823707297044
-3th file
-Total Distance: 1957.0620116661667
-Total Total Elevation: 29.039999999999992
-Total Total Time: 868000.0
-Total Average Speed: 0.011322354520388765
-4th file
+User: user1
+Total Distance: 11672.3066292606
+Total Elevation: 110.39000000000001
+Total Time: 2929000.0
+User: user2
+Total Distance: 3256.241504359123
+Total Elevation: 33.89999999999999
+Total Time: 1196000.0
+User: user3
 Total Distance: 4874.596360876839
-Total Total Elevation: 53.43000000000002
-Total Total Time: 1186000.0
-Total Average Speed: 0.021245162273939702
-5th file
-Total Distance: 4874.596360876839
-Total Total Elevation: 53.43000000000002
-Total Total Time: 1186000.0
-Total Average Speed: 0.021245162273939702
-6th file
-Total Distance: 4670.380821357834
-Total Total Elevation: 50.47
-Total Total Time: 906000.0
-Total Average Speed: 0.025911037456816163
+Total Elevation: 53.43000000000002
+Total Time: 1186000.0

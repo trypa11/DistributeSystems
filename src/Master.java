@@ -11,9 +11,9 @@ public class Master {
     ArrayList<Double> total_averageSpeed = new ArrayList<Double>();
     ArrayList<Double> total_totalElevation = new ArrayList<Double>();
     ArrayList<Double> total_totalTime = new ArrayList<Double>();
-    ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>();
-    //array list file 
+    ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>(); 
     ArrayList<File> gpxFiles = new ArrayList<File>();
+    ArrayList<UserData> userlist = new ArrayList<UserData>();
     
     // array list that save the chunks from diffrent gpx file
     ArrayList<ArrayList<Waypoint>> chunkslist = new ArrayList<ArrayList<Waypoint>>();
@@ -33,21 +33,20 @@ public class Master {
         average_dist = average_dist / total_dist.size();
         average_totalElevation = average_totalElevation / total_totalElevation.size();
         average_totalTime = average_totalTime / total_totalTime.size();
-        //write the results to the file
         try {
             results = new File("results.txt");
             FileWriter fw = new FileWriter(results);
             fw.write("Average Distance: " + average_dist + "\n");
             fw.write("Average Total Elevation: " + average_totalElevation + "\n");
             fw.write("Average Total Time: " + average_totalTime + "\n");
-            //write the total dist , total elevation and total time to the file
-            for (int i = 0; i < total_dist.size(); i++) {
-                fw.write(i + 1 + "th file" + "\n");
-                fw.write("Total Distance: " + total_dist.get(i) + "\n");
-                fw.write("Total Total Elevation: " + total_totalElevation.get(i) + "\n");
-                fw.write("Total Total Time: " + total_totalTime.get(i) + "\n");
-                fw.write("Total Average Speed: " + total_averageSpeed.get(i) + "\n");
+            //write the total dist , total elevation and total time to the file for each user
+            for (int i = 0; i < userlist.size(); i++) {
+                fw.write("User: " + userlist.get(i).getName() + "\n");
+                fw.write("Total Distance: " + userlist.get(i).getDist() + "\n");
+                fw.write("Total Elevation: " + userlist.get(i).getTotalElevation() + "\n");
+                fw.write("Total Time: " + userlist.get(i).getTotalTime() + "\n");
             }
+
             fw.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,7 +55,7 @@ public class Master {
     }
 
     // reduce method
-    public void reduce() {
+    public synchronized void reduce(String user) {
         double total_dist = 0;
         double total_averageSpeed = 0;
         double total_totalElevation = 0;
@@ -68,23 +67,33 @@ public class Master {
             total_totalElevation += reducelistchunk.get(i).getTotalElevation();
             total_totalTime += reducelistchunk.get(i).getTotalTime();
         }
-        // save it to the total arraylists
+
+        boolean flag = false;
+        for (int i = 0; i < userlist.size(); i++) {
+            if (userlist.get(i).getName().equals(user)) {
+                userlist.get(i).addDist(total_dist);
+                userlist.get(i).addTotalElevation(total_totalElevation);
+                userlist.get(i).addTotalTime(total_totalTime);
+                userlist.get(i).addAverageSpeed(total_averageSpeed);
+                flag = true;
+            }
+        }
+        if (flag == false) {
+            UserData u = new UserData(user, total_dist, total_averageSpeed, total_totalElevation, total_totalTime);
+            userlist.add(u);
+        }
+        //add the data to the array list of total data
         this.total_dist.add(total_dist);
-        this.total_averageSpeed.add(total_averageSpeed);
         this.total_totalElevation.add(total_totalElevation);
         this.total_totalTime.add(total_totalTime);
+        this.total_averageSpeed.add(total_averageSpeed);
+
         this.reducelistchunk.clear();
     }
 
     public static void main(String[] args) throws Exception {
         Master m = new Master();
         m.openserverclient();
-        m.reduce();
-        // print the results
-        System.out.println("Total Distance: " + m.total_dist);
-        System.out.println("Total Average Speed: " + m.total_averageSpeed);
-        System.out.println("Total Total Elevation: " + m.total_totalElevation);
-        System.out.println("Total Total Time: " + m.total_totalTime);
     }
 
     public void openserverclient() throws Exception {
@@ -129,19 +138,20 @@ public class Master {
             s = new ServerSocket(6969, 10);
             while (gpxFiles.size() > gpx_num) {
                 File gpx = gpxFiles.get(gpx_num);
-                GPXParser chunk = new GPXParser(gpx);
+                GPXParser chunk = new GPXParser(gpx); 
                 this.chunkslist = chunk.Chunk();
+                String user=chunkslist.get(0).get(0).getUser();
                 int curr_chunk = 0;
                 while (curr_chunk < chunkslist.size()) {
                     /* Accept the connections */
                     Socket provider_socket = s.accept();
                     ActionForWorkers d = new ActionForWorkers(provider_socket, chunkslist.get(curr_chunk));
                     d.start();
-                    Thread.sleep(1000);
+                    Thread.sleep(10);
                     curr_chunk++;
                     reducelistchunk.add(d.getChunksCalc());
                 }
-            reduce();
+            reduce(user);
             gpx_num++;
             this.chunkslist.clear();
         }

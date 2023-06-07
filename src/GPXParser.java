@@ -22,6 +22,12 @@ public class GPXParser implements Serializable {
         // Create a new HashMap to store the waypoints
         waypoints = new ArrayList<Waypoint>();
 
+        NodeList gpxList = doc.getElementsByTagName("gpx");
+        Element gpxElement = (Element) gpxList.item(0);
+        String user = gpxElement.getAttribute("creator");
+
+
+
         // Get all waypoints from GPX file
         NodeList wptList = doc.getElementsByTagName("wpt");
         for (int i = 0; i < wptList.getLength(); i++) {
@@ -42,12 +48,9 @@ public class GPXParser implements Serializable {
             long timeInMillis = time.getTime();
 
             // Create a new Waypoint object and add it to the HashMap
-            int id=i;
-            Waypoint waypoint = new Waypoint(id, lat, lon, ele, timeInMillis);
+            Waypoint waypoint = new Waypoint(user, lat, lon, ele, timeInMillis);
             waypoints.add(waypoint);
-        }
-
-        
+        }   
 
 
     }
@@ -79,14 +82,15 @@ public class GPXParser implements Serializable {
 class Waypoint implements Serializable {
 
 
-    private int id;
+    private String user;
     private double lat;
     private double lon;
     private double ele;
     private long time;
 
-    public Waypoint(int id, double lat, double lon, double ele, long time) {
-        this.id = id;
+
+    public Waypoint(String user, double lat, double lon, double ele, long time) {
+        this.user = user;
         this.lat = lat;
         this.lon = lon;
         this.ele = ele;
@@ -94,10 +98,9 @@ class Waypoint implements Serializable {
     }
 
     //return id of waypoint
-    public int getId() { return id; }
-    //set id of waypoint
-    public void setId(int id) { this.id = id; }
-
+    public String getUser() { 
+        return user; 
+    }
     //return latitude of waypoint
     public double getLat() {
         return lat;
@@ -117,6 +120,8 @@ class Waypoint implements Serializable {
 
     @Override
     public String toString() {
-        return "(" + lat + ", " + lon + ") @ " + ele + "m, " + time + "ms";
+        return user +"("  + lat + ", " + lon + ") @ " + ele + "m, " + time + "ms";
     }
+
+
 }
