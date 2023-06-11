@@ -98,7 +98,7 @@ public class Master {
 
     public void openserverclient() throws Exception {
         try {
-            s_c = new ServerSocket(6666, 10);
+            s_c = new ServerSocket(1234, 10);
             while (true) {
                 Socket client_socket = s_c.accept();
                 /* Handle the request */
@@ -106,9 +106,10 @@ public class Master {
                 c.start();
                 // wait 1 sec for the client to finish
                 synchronized (c) {
-                    c.wait(100);
+                    c.wait(100); 
                 }
-                gpxFiles = ((ActionsForClients) c).getGpxFile();
+                gpx = ((ActionsForClients) c).getGpxFile();
+                gpxFiles.add(gpx);
                 openServer();
                 this.results = StatisticCalculator(total_dist, total_totalElevation, total_totalTime, total_averageSpeed);
                 ((ActionsForClients) c).setResultsFile(results);
@@ -147,13 +148,14 @@ public class Master {
                     Socket provider_socket = s.accept();
                     ActionForWorkers d = new ActionForWorkers(provider_socket, chunkslist.get(curr_chunk));
                     d.start();
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                     curr_chunk++;
                     reducelistchunk.add(d.getChunksCalc());
                 }
             reduce(user);
             gpx_num++;
             this.chunkslist.clear();
+            
         }
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -161,6 +163,9 @@ public class Master {
             try {
                 if (provider_socket != null){
                     provider_socket.close();
+                }
+                if (s != null) {
+                    s.close();
                 }
             } catch (IOException ioException) {
                 ioException.printStackTrace();

@@ -1,12 +1,13 @@
 import java.io.*;
 import java.net.*;
-import java.util.*;
 
 public class ActionsForClients extends Thread {
     ObjectInputStream in;
     ObjectOutputStream out;
-    ArrayList<File> gpxFiles;
+    String gpxString;
+    File gpxFiles;
     File results=null;
+    String resultsString;
 
     public ActionsForClients(Socket connection) {
         try {
@@ -20,7 +21,8 @@ public class ActionsForClients extends Thread {
     public synchronized void run() {
         try {
 
-            gpxFiles = (ArrayList<File>) in.readObject();
+            gpxString = in.readUTF();
+            gpxFiles = createFile(gpxString);
             //wait until the results are ready
             if(results==null){
                 try{
@@ -30,7 +32,8 @@ public class ActionsForClients extends Thread {
                 }
             }
             //send the results to the client
-            out.writeObject(results);
+            resultsString = fileToString(results);
+            out.writeUTF(resultsString);
             out.flush();
             
             
@@ -60,12 +63,36 @@ public class ActionsForClients extends Thread {
     }
 
     // get method of a file from client
-    public ArrayList<File> getGpxFile() throws IOException, ClassNotFoundException {
+    public File getGpxFile() throws IOException, ClassNotFoundException {
         return gpxFiles;
     }
 
     public void setResultsFile(File results) throws IOException, ClassNotFoundException {
         this.results = results;
     }
+    public File createFile(String gpx) throws IOException, ClassNotFoundException { 
+        File file = new File("gpx.txt");
+        FileWriter fr = new FileWriter(file);
+        fr.write(gpx);
+        fr.close();
+        return file;
+    }
+    //create a file to string method
+    public String fileToString(File file) throws IOException, ClassNotFoundException{
+        String results = "";
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+        while((line=br.readLine())!=null){
+            results+=line;
+        }
+        br.close();
+        return results;
+    }
+
+
+
+
+
+
 
 }

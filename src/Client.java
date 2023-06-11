@@ -25,8 +25,9 @@ public class Client extends Thread {
             out.writeObject(gpxFiles);
             out.flush();
 
-             File results = (File)in.readObject();
-             System.out.println(results);
+            File results = (File)in.readObject();
+            System.out.println(results);
+            
 
         } catch (UnknownHostException unknownHost) {
             System.err.println("You are trying to connect to an unknown host!");

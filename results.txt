@@ -1,0 +1,11 @@
+Average Distance: 1667.2461390631663
+Average Total Elevation: 5.584444444444447
+Average Total Time: 554222.2222222222
+User: user1
+Total Distance: 34037.27115241484
+Total Elevation: 103.83999999999993
+Total Time: 1.3392E7
+User: user2
+Total Distance: 25983.589853859135
+Total Elevation: 97.2
+Total Time: 6560000.0
