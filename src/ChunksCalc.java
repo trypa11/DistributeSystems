@@ -75,5 +75,9 @@ public class ChunksCalc implements Serializable {
         double time = waypoints.get(waypoints.size()-1).getTime() - waypoints.get(0).getTime();
         return time;
     }
+    //get waypoints
+    public ArrayList<Waypoint> getWaypoints() {
+        return waypoints;
+    }
 
 }

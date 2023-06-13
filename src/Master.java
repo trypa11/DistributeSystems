@@ -14,6 +14,7 @@ public class Master {
     ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>(); 
     ArrayList<File> gpxFiles = new ArrayList<File>();
     ArrayList<UserData> userlist = new ArrayList<UserData>();
+    String currUser;
     
     // array list that save the chunks from diffrent gpx file
     ArrayList<ArrayList<Waypoint>> chunkslist = new ArrayList<ArrayList<Waypoint>>();
@@ -36,6 +37,7 @@ public class Master {
         try {
             results = new File("results.txt");
             FileWriter fw = new FileWriter(results);
+            fw.write(currUser + "\n");
             fw.write("Average Distance: " + average_dist + "\n");
             fw.write("Average Total Elevation: " + average_totalElevation + "\n");
             fw.write("Average Total Time: " + average_totalTime + "\n");
@@ -104,9 +106,8 @@ public class Master {
                 /* Handle the request */
                 ActionsForClients c = new ActionsForClients(client_socket);
                 c.start();
-                // wait 1 sec for the client to finish
                 synchronized (c) {
-                    c.wait(100); 
+                    c.wait(10);
                 }
                 gpx = ((ActionsForClients) c).getGpxFile();
                 gpxFiles.add(gpx);
@@ -142,13 +143,17 @@ public class Master {
                 GPXParser chunk = new GPXParser(gpx); 
                 this.chunkslist = chunk.Chunk();
                 String user=chunkslist.get(0).get(0).getUser();
+                this.currUser=user;
                 int curr_chunk = 0;
                 while (curr_chunk < chunkslist.size()) {
                     /* Accept the connections */
                     Socket provider_socket = s.accept();
                     ActionForWorkers d = new ActionForWorkers(provider_socket, chunkslist.get(curr_chunk));
                     d.start();
-                    Thread.sleep(100);
+                    //Thread.sleep(10);
+                    synchronized (d) {
+                        d.wait(10);
+                    }
                     curr_chunk++;
                     reducelistchunk.add(d.getChunksCalc());
                 }
