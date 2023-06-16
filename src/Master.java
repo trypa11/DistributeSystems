@@ -12,6 +12,8 @@ public class Master {
     ArrayList<Double> total_totalElevation = new ArrayList<Double>();
     ArrayList<Double> total_totalTime = new ArrayList<Double>();
     ArrayList<ChunksCalc> reducelistchunk = new ArrayList<ChunksCalc>(); 
+    Segments seg = new Segments();
+    ArrayList<Segments> seglist = new ArrayList<Segments>();
     ArrayList<File> gpxFiles = new ArrayList<File>();
     ArrayList<UserData> userlist = new ArrayList<UserData>();
     String currUser;
@@ -48,7 +50,11 @@ public class Master {
                 fw.write("Total Elevation: " + userlist.get(i).getTotalElevation() + "\n");
                 fw.write("Total Time: " + userlist.get(i).getTotalTime() + "\n");
             }
-
+            //write the segments to the file
+            for(int i = 0; i < seglist.size(); i++){
+                int n= i+1;
+                fw.write("Segment: "+n+"\n"+seglist.get(i).printLeaderboard());
+            }
             fw.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -69,6 +75,11 @@ public class Master {
             total_totalElevation += reducelistchunk.get(i).getTotalElevation();
             total_totalTime += reducelistchunk.get(i).getTotalTime();
         }
+        if (currUser.equals("gpxgenerator.com")) {
+                Segments seg = new Segments();
+                seg.setSegments(reducelistchunk); 
+                seglist.add(seg);           
+        }else{
 
         boolean flag = false;
         for (int i = 0; i < userlist.size(); i++) {
@@ -89,6 +100,12 @@ public class Master {
         this.total_totalElevation.add(total_totalElevation);
         this.total_totalTime.add(total_totalTime);
         this.total_averageSpeed.add(total_averageSpeed);
+        //for each segment add the user
+        for (int i = 0; i < seglist.size(); i++) {
+            seglist.get(i).setUser(reducelistchunk);
+        }
+        }
+    
 
         this.reducelistchunk.clear();
     }
@@ -159,6 +176,7 @@ public class Master {
                 }
             reduce(user);
             gpx_num++;
+            gpxFiles.clear();
             this.chunkslist.clear();
             
         }
